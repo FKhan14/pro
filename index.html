@@ -108,6 +108,9 @@
                 enemy.x = enemy.position;
 
                 if (enemy.x >= canvas.width || enemy.health <= 0) {
+                    if (enemy.health <= 0) {
+                        money += enemy.reward; // Earn money for killing enemy
+                    }
                     activeEnemies.splice(i, 1); // Remove enemy from array
                 }
             }
