@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,11 +14,13 @@
             height: 100vh;
             background-color: #f0f0f0;
         }
+
         #gameCanvas {
             border: 2px solid #333;
         }
     </style>
 </head>
+
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <script>
@@ -27,12 +30,12 @@
         // Game variables
         let money = 100;
         const towers = [
-            { name: 'Basic Tower', cost: 20, range: 100, damage: 10, cooldown: 20 },
-            { name: 'Sniper Tower', cost: 50, range: 200, damage: 20, cooldown: 30 }
+            { name: 'Basic Tower', cost: 20, range: 100, damage: 1, cooldown: 10 },
+            { name: 'Sniper Tower', cost: 50, range: 200, damage: 20, cooldown: 12 }
         ];
         const enemies = [
-            { name: 'Goblin', health: 300, speed: .5, reward: 10 },
-            { name: 'Orc', health: 500, speed: .1, reward: 20 }
+            { name: 'Goblin', health: 30, speed: 1, reward: 10 },
+            { name: 'Orc', health: 50, speed: 2, reward: 20 }
         ];
 
         const placedTowers = [];
@@ -45,30 +48,30 @@
 
         function handleClick(event) {
             const mouseX = event.clientX - canvas.getBoundingClientRect().left;
-    const mouseY = event.clientY - canvas.getBoundingClientRect().top;
+            const mouseY = event.clientY - canvas.getBoundingClientRect().top;
 
-    // Check if a tower icon is clicked
-    let towerIconClicked = false;
-    for (let i = 0; i < towers.length; i++) {
-        const tower = towers[i];
-        if (mouseX >= i * 100 && mouseX <= (i + 1) * 100 && mouseY >= canvas.height - 50) {
-            selectedTowerIndex = i;
-            towerIconClicked = true;
-            break;
-        }
-    }
+            // Check if a tower icon is clicked
+            let towerIconClicked = false;
+            for (let i = 0; i < towers.length; i++) {
+                const tower = towers[i];
+                if (mouseX >= i * 100 && mouseX <= (i + 1) * 100 && mouseY >= canvas.height - 50) {
+                    selectedTowerIndex = i;
+                    towerIconClicked = true;
+                    break;
+                }
+            }
 
-    // If a tower icon is not clicked, handle tower placement
-    if (!towerIconClicked && selectedTowerIndex !== null) {
-        const gridX = Math.floor(mouseX / 50) * 50;
-        const gridY = Math.floor(mouseY / 50) * 50;
+            // If a tower icon is not clicked, handle tower placement
+            if (!towerIconClicked && selectedTowerIndex !== null) {
+                const gridX = Math.floor(mouseX / 50) * 50;
+                const gridY = Math.floor(mouseY / 50) * 50;
 
-        // Check if the grid cell is empty and if the player has enough money
-        if (!isCellOccupied(gridX, gridY) && money >= towers[selectedTowerIndex].cost) {
-            placeTower(gridX, gridY, selectedTowerIndex);
-        }
-        selectedTowerIndex = null;
-    }
+                // Check if the grid cell is empty and if the player has enough money
+                if (!isCellOccupied(gridX, gridY) && money >= towers[selectedTowerIndex].cost) {
+                    placeTower(gridX, gridY, selectedTowerIndex);
+                }
+                selectedTowerIndex = null;
+            }
         }
 
         function isCellOccupied(x, y) {
@@ -99,22 +102,26 @@
         }
 
         function moveEnemies() {
-            for (const enemy of activeEnemies) {
+            for (let i = activeEnemies.length - 1; i >= 0; i--) {
+                const enemy = activeEnemies[i];
                 enemy.position += enemy.speed;
                 enemy.x = enemy.position;
+
+                if (enemy.x >= canvas.width || enemy.health <= 0) {
+                    activeEnemies.splice(i, 1); // Remove enemy from array
+                }
             }
         }
 
         function handleInteractions() {
             for (const tower of placedTowers) {
                 for (const enemy of activeEnemies) {
-                    if (calculateDistance(tower, enemy) <= tower.range) {
+                    const distance = calculateDistance(tower, enemy);
+                    console.log(enemy.health);
+                    if (distance <= tower.range) {
                         if (tower.cooldown >= 0) {
                             enemy.health -= tower.damage;
                             tower.cooldown = tower.cooldown;
-                            if(enemy.health <= 0){
-                                activeEnemies.pop(enemy);
-                            }
                         }
                     }
                     tower.cooldown = Math.max(0, tower.cooldown - 1);
@@ -143,30 +150,30 @@
 
             // Draw enemies
             for (const enemy of activeEnemies) {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(enemy.x, enemy.y, 20, 20);
-    }
-
-    // Draw attack animations from towers to enemies
-    ctx.strokeStyle = 'black';
-    for (const tower of placedTowers) {
-        for (const enemy of activeEnemies) { // Ensure enemy is properly defined here
-            const distance = calculateDistance(tower, enemy);
-            if (distance <= tower.range && tower.cooldown === 0) {
-                ctx.beginPath();
-                ctx.moveTo(tower.x + 15, tower.y + 15); // Starting point at tower center
-                ctx.lineTo(enemy.x + 10, enemy.y + 10); // Ending point at enemy center
-                ctx.stroke();
-
+                ctx.fillStyle = 'red';
+                ctx.fillRect(enemy.x, enemy.y, 20, 20);
             }
-        }
-    }
+
+            // Draw attack animations from towers to enemies
+            ctx.strokeStyle = 'black';
+            for (const tower of placedTowers) {
+                for (const enemy of activeEnemies) { // Ensure enemy is properly defined here
+                    const distance = calculateDistance(tower, enemy);
+                    if (distance <= tower.range && tower.cooldown === 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(tower.x + 15, tower.y + 15); // Starting point at tower center
+                        ctx.lineTo(enemy.x + 10, enemy.y + 10); // Ending point at enemy center
+                        ctx.stroke();
+
+                    }
+                }
+            }
 
             // Draw UI elements
             ctx.fillStyle = 'black';
             ctx.fillText(`Money: $${money}`, 10, 20);
         }
-        let remainingEnemies =0;
+        let remainingEnemies = 0;
         function updateGameState() {
             // Check if all enemies in a wave are defeated
             if (remainingEnemies === 0 && activeEnemies.length === 0) {
@@ -211,16 +218,16 @@
             ctx.fillText('Game Over', canvas.width / 2 - 150, canvas.height / 2);
         }
         let lastEnemySpawnTime = 0;
-const enemySpawnInterval = 1000; // Spawn an enemy every 1 second
+        const enemySpawnInterval = 1000; // Spawn an enemy every 1 second
 
-function timeToSpawnEnemy() {
-    const currentTime = performance.now();
-    if (currentTime - lastEnemySpawnTime >= enemySpawnInterval) {
-        lastEnemySpawnTime = currentTime;
-        return true;
-    }
-    return false;
-}
+        function timeToSpawnEnemy() {
+            const currentTime = performance.now();
+            if (currentTime - lastEnemySpawnTime >= enemySpawnInterval) {
+                lastEnemySpawnTime = currentTime;
+                return true;
+            }
+            return false;
+        }
 
 
         function gameLoop() {
@@ -259,4 +266,5 @@ function timeToSpawnEnemy() {
         gameLoop();
     </script>
 </body>
+
 </html>
