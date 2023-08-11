@@ -1,273 +1,545 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
+ 
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Tower Defense Game</title>
+
     <style>
+
         body {
+
             margin: 0;
+
             display: flex;
+
             justify-content: center;
+
             align-items: center;
+
             height: 100vh;
+
             background-color: #f0f0f0;
+
         }
+
+ 
 
         #gameCanvas {
+
             border: 2px solid #333;
+
         }
+
     </style>
+
 </head>
 
+ 
+
 <body>
+<!--declares game board -->
     <canvas id="gameCanvas" width="800" height="600"></canvas>
+
     <script>
+
         const canvas = document.getElementById('gameCanvas');
+
         const ctx = canvas.getContext('2d');
 
+ 
+
         // Game variables
+
         let money = 100;
+
         const towers = [
+            //tower options
             { name: 'Basic Tower', cost: 20, range: 100, damage: 1, cooldown: 10 },
+
             { name: 'Sniper Tower', cost: 50, range: 200, damage: 2, cooldown: 12 }
-        ];
-        const enemies = [
-            { name: 'Goblin', health: 300, speed: 1, reward: 10 },
-            { name: 'Orc', health: 500, speed: 2, reward: 20 }
+
         ];
 
-        const placedTowers = [];
+        const enemies = [
+            // enemy options
+            { name: 'Goblin', health: 30, speed: 1, reward: 10 },
+
+            { name: 'Orc', health: 50, speed: 2, reward: 20 }
+
+        ];
+
+ 
+        const placedTowers = []; 
+
         const activeEnemies = [];
+
         let waveInProgress = false;
+
         let waveCounter = 0;
+
         let selectedTowerIndex = null; // Track the selected tower
+
+        // end of variables
 
         canvas.addEventListener('click', handleClick);
 
+ 
+
         function handleClick(event) {
+            // retrieves the x and y value of a mouse click
             const mouseX = event.clientX - canvas.getBoundingClientRect().left;
+
             const mouseY = event.clientY - canvas.getBoundingClientRect().top;
 
+ 
+
             // Check if a tower icon is clicked
+
             let towerIconClicked = false;
+
             for (let i = 0; i < towers.length; i++) {
+
                 const tower = towers[i];
+
                 if (mouseX >= i * 100 && mouseX <= (i + 1) * 100 && mouseY >= canvas.height - 50) {
+
                     selectedTowerIndex = i;
+
                     towerIconClicked = true;
+
                     break;
+
                 }
+
             }
+
+ 
 
             // If a tower icon is not clicked, handle tower placement
+
             if (!towerIconClicked && selectedTowerIndex !== null) {
+
                 const gridX = Math.floor(mouseX / 50) * 50;
+
                 const gridY = Math.floor(mouseY / 50) * 50;
 
+ 
+
                 // Check if the grid cell is empty and if the player has enough money
+
                 if (!isCellOccupied(gridX, gridY) && money >= towers[selectedTowerIndex].cost) {
+
                     placeTower(gridX, gridY, selectedTowerIndex);
+
                 }
+
                 selectedTowerIndex = null;
+
             }
+
         }
 
+ 
+        // function to check if cells are open
         function isCellOccupied(x, y) {
+
             for (const tower of placedTowers) {
+
                 if (tower.x === x && tower.y === y) {
+
                     return true;
+
                 }
+
             }
+
             return false;
+
         }
+
+ 
 
         function placeTower(x, y, towerIndex) {
+
             money -= towers[towerIndex].cost;
+
             placedTowers.push({
+
                 ...towers[towerIndex],
+
                 x: x,
+
                 y: y,
+
                 cooldown: 0
+
             });
+
         }
 
+        //ENEMY FUNCTIONALITY
+        //creates enemies and adds them to the activeEnemies array
         function spawnEnemy() {
+    
             if (waveInProgress) {
+
                 const randomEnemyIndex = Math.floor(Math.random() * enemies.length);
+
                 const enemy = { ...enemies[randomEnemyIndex], x: 0, y: 250, position: 0 };
+
                 activeEnemies.push(enemy);
+
             }
+
         }
 
+ 
+        //enemy movement
         function moveEnemies() {
+
             for (let i = activeEnemies.length - 1; i >= 0; i--) {
+
                 const enemy = activeEnemies[i];
+
                 enemy.position += enemy.speed;
+
                 enemy.x = enemy.position;
 
-                if (enemy.x >= canvas.width || enemy.health <= 0) {
+ 
+                // enemy death or lose game
+                if (enemy.health <= 0) {
+
                     if (enemy.health <= 0) {
+
                         money += enemy.reward; // Earn money for killing enemy
+
                     }
+
                     activeEnemies.splice(i, 1); // Remove enemy from array
+
                 }
+
             }
+
         }
+
+ 
 
         function handleInteractions() {
+
             for (const tower of placedTowers) {
+
                 for (const enemy of activeEnemies) {
+
                     const distance = calculateDistance(tower, enemy);
+
                     console.log(enemy.health);
+                    //tower attacks enemies if they're in range
                     if (distance <= tower.range) {
+
                         if (tower.cooldown >= 0) {
+
                             enemy.health -= tower.damage;
+
                             tower.cooldown = tower.cooldown;
+
+ 
+
                         }
+
                     }
+
                     tower.cooldown = Math.max(0, tower.cooldown - 1);
+
                 }
+
             }
+
         }
 
+ 
+        //find distance
         function calculateDistance(pointA, pointB) {
+
             return Math.sqrt((pointA.x - pointB.x) ** 2 + (pointA.y - pointB.y) ** 2);
+
         }
+
+ 
 
         function drawGameElements() {
+
             // Draw the tower icons at the bottom
+
             for (let i = 0; i < towers.length; i++) {
+
                 ctx.fillStyle = 'gray';
+
                 ctx.fillRect(i * 100, canvas.height - 50, 100, 50);
+
                 ctx.fillStyle = 'black';
+
                 ctx.fillText(towers[i].name, i * 100 + 10, canvas.height - 20);
+
             }
+
+ 
 
             // Draw placed towers
+
             for (const tower of placedTowers) {
+
                 ctx.fillStyle = 'blue';
+
                 ctx.fillRect(tower.x, tower.y, 30, 30);
+
             }
+
+ 
 
             // Draw enemies
+
             for (const enemy of activeEnemies) {
+
                 ctx.fillStyle = 'red';
+
                 ctx.fillRect(enemy.x, enemy.y, 20, 20);
+
             }
+
+ 
 
             // Draw attack animations from towers to enemies
+
             ctx.strokeStyle = 'black';
+
             for (const tower of placedTowers) {
+
                 for (const enemy of activeEnemies) { // Ensure enemy is properly defined here
+
                     const distance = calculateDistance(tower, enemy);
+
                     if (distance <= tower.range && tower.cooldown === 0) {
+
                         ctx.beginPath();
+
                         ctx.moveTo(tower.x + 15, tower.y + 15); // Starting point at tower center
+
                         ctx.lineTo(enemy.x + 10, enemy.y + 10); // Ending point at enemy center
+
                         ctx.stroke();
 
+ 
+
                     }
+
                 }
+
             }
+
+ 
 
             // Draw UI elements
+
             ctx.fillStyle = 'black';
+
             ctx.fillText(`Money: $${money}`, 10, 20);
-        }
-        let remainingEnemies = 0;
-        function updateGameState() {
-            // Check if all enemies in a wave are defeated
-            if (remainingEnemies === 0 && activeEnemies.length === 0) {
-                waveInProgress = false;
-                waveCounter++;
-                remainingEnemies = Math.floor(waveCounter * 1.5) + 2; // Adjust wave difficulty
-                startWave();
-            }
+
         }
 
-        function allWavesCompleted() {
-            // Modify this function as needed
-            return waveCounter >= 5; //  complete after 5 waves
+        let remainingEnemies = 0;
+
+        function updateGameState() {
+
+            // Check if all enemies in a wave are defeated
+
+            if (remainingEnemies === 0 && activeEnemies.length === 0) {
+
+                waveInProgress = false;
+
+                waveCounter++;
+
+                remainingEnemies = Math.floor(waveCounter * 1.5) + 2; // Adjust wave difficulty
+
+                startWave();
+
+            }
+
         }
+
+ 
+    
+        function allWavesCompleted() {
+
+            // Modify this function as needed
+
+            return waveCounter >= 5; //  complete after 5 waves
+
+        }
+
+ 
 
         function anyEnemyReachesEnd() {
+
             // Check if any enemy reaches the end
+
             for (const enemy of activeEnemies) {
+
                 if (enemy.x >= canvas.width) {
+
                     return true;
                 }
+
             }
+
             return false;
+
         }
+
+ 
 
         function startWave() {
+
             waveInProgress = true;
+
             remainingEnemies = Math.floor(waveCounter * 1.5) + 2;
+
         }
+
+ 
 
         function displayWinScreen() {
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             ctx.fillStyle = 'green';
+
             ctx.font = 'bold 48px Arial';
+
             ctx.fillText('You Win!', canvas.width / 2 - 100, canvas.height / 2);
+
         }
+
+ 
 
         function displayLoseScreen() {
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             ctx.fillStyle = 'red';
+
             ctx.font = 'bold 48px Arial';
+
             ctx.fillText('Game Over', canvas.width / 2 - 150, canvas.height / 2);
+
         }
+
         let lastEnemySpawnTime = 0;
+
         const enemySpawnInterval = 1000; // Spawn an enemy every 1 second
 
+ 
+
         function timeToSpawnEnemy() {
+
             const currentTime = performance.now();
+
             if (currentTime - lastEnemySpawnTime >= enemySpawnInterval) {
+
                 lastEnemySpawnTime = currentTime;
+
                 return true;
+
             }
+
             return false;
+
         }
 
+ 
+
+ 
 
         function gameLoop() {
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+ 
+
             // Implement drawing of game elements here
+
             drawGameElements();
 
+ 
+
             // Implement tower placement, enemy movement, and game logic
+
             if (waveInProgress) {
+
                 if (timeToSpawnEnemy()) {
+
                     spawnEnemy();
+
                 }
+
                 moveEnemies();
+
             }
+
+ 
 
             handleInteractions();
+
             updateGameState();
 
+ 
+
             // Check for win/lose conditions
+
             if (allWavesCompleted()) {
+
                 displayWinScreen();
+
                 return;
+
             }
+
+ 
 
             if (anyEnemyReachesEnd()) {
+
                 displayLoseScreen();
+
                 return;
+
             }
 
+ 
+
             // Continue game loop
+
             requestAnimationFrame(gameLoop);
+
         }
 
+ 
+
         // Start the game loop
+
         gameLoop();
+
     </script>
+
 </body>
+
+ 
 
 </html>
