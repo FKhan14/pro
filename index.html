@@ -48,7 +48,6 @@
 <!--declares game board -->
     <canvas id="gameCanvas" width="800" height="600"></canvas>
 
-    <div id="waveInfo" style="position: absolute; top: 20px; left: 10px; font-size: 18px;"></div>
     <script>
 
         const canvas = document.getElementById('gameCanvas');
@@ -76,9 +75,11 @@
 
         const activeEnemies = [];
 
-        let waveInProgress = false;
+        var waveInProgress = false;
 
-        let waveCounter = 0;
+        var kills = 0;
+        var diff = 20;
+
 
         let selectedTowerIndex = null; // Track the selected tower
 
@@ -209,13 +210,13 @@
                 enemy.x = enemy.position;
 
  
-                // enemy death or lose game
+                // enemy death
                 if (enemy.health <= 0) {
 
                     if (enemy.health <= 0) {
 
                         money += enemy.reward; // Earn money for killing enemy
-
+                        kills++;
                     }
 
                     activeEnemies.splice(i, 1); // Remove enemy from array
@@ -235,8 +236,7 @@
                 for (const enemy of activeEnemies) {
 
                     const distance = calculateDistance(tower, enemy);
-
-                    console.log(enemy.health);
+                    
                     //tower attacks enemies if they're in range
                     if (distance <= tower.range) {
 
@@ -251,7 +251,12 @@
                         }
 
                     }
-
+                    if(kills==diff){
+                            enemies.health += 10;
+                            diff += 20;
+                            console.log(kills);
+                            console.log(enemies.health);
+                        }
                     tower.cooldown = Math.max(0, tower.cooldown - 1);
 
                 }
@@ -348,9 +353,7 @@
 
             ctx.fillText(`Money: $${money}`, 10, 20);
 
-            // Display wave information
-            ctx.fillStyle = 'black';
-            ctx.fillText(`Wave: ${waveCounter + 1}`, 10, 40); // Display current wave number
+
         }
 
         let remainingEnemies = 0;
@@ -363,9 +366,8 @@
 
                 waveInProgress = false;
 
-                waveCounter++;
 
-                remainingEnemies = Math.floor(waveCounter * 1.5) + 2; // Adjust wave difficulty
+                //remainingEnemies = Math.floor(waveCounter * 1.5) + 2; // Adjust wave difficulty
 
                 startWave();
 
@@ -379,7 +381,7 @@
 
             // Modify this function as needed
 
-            return waveCounter >= 5; //  complete after 5 waves
+            return  //  complete after 5 waves
 
         }
 
@@ -408,7 +410,7 @@
 
             waveInProgress = true;
 
-            remainingEnemies = Math.floor(waveCounter * 1.5) + 2;
+            //remainingEnemies = Math.floor(waveCounter * 1.5) + 2;
 
         }
 
