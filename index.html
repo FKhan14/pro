@@ -48,6 +48,7 @@
 <!--declares game board -->
     <canvas id="gameCanvas" width="800" height="600"></canvas>
 
+    <div id="waveInfo" style="position: absolute; top: 20px; left: 10px; font-size: 18px;"></div>
     <script>
 
         const canvas = document.getElementById('gameCanvas');
@@ -61,19 +62,13 @@
         let money = 100;
 
         const towers = [
-            //tower options
-            { name: 'Basic Tower', cost: 20, range: 100, damage: 1, cooldown: 10 },
-
-            { name: 'Sniper Tower', cost: 50, range: 200, damage: 2, cooldown: 12 }
-
+            { name: 'Basic Tower', cost: 20, range: 50, damage: .5, cooldown: 100 },
+            { name: 'Sniper Tower', cost: 50, range: 100, damage: 1, cooldown: 120 }
         ];
 
         const enemies = [
-            // enemy options
-            { name: 'Goblin', health: 30, speed: 1, reward: 10 },
-
-            { name: 'Orc', health: 50, speed: 2, reward: 20 }
-
+            { name: 'Goblin', health: 40, speed: 1, reward: 5 },
+            { name: 'Orc', health: 60, speed: 2, reward: 10 }
         ];
 
  
@@ -353,6 +348,9 @@
 
             ctx.fillText(`Money: $${money}`, 10, 20);
 
+            // Display wave information
+            ctx.fillStyle = 'black';
+            ctx.fillText(`Wave: ${waveCounter + 1}`, 10, 40); // Display current wave number
         }
 
         let remainingEnemies = 0;
