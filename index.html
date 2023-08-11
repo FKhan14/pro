@@ -106,8 +106,8 @@
         }
 
         function handleInteractions() {
+            console.log(enemy.health);
             for (const tower of placedTowers) {
-                console.log(enemy.health);
                 for (const enemy of activeEnemies) {
                     if (calculateDistance(tower, enemy) <= tower.range) {
                         if (tower.cooldown >= 0) {
@@ -141,27 +141,24 @@
 
             // Draw enemies
             for (const enemy of activeEnemies) {
-                ctx.fillStyle = 'red';
-                ctx.fillRect(enemy.x, enemy.y, 20, 20);
-            }
-            // Draw attack animations from towers to enemies
+        ctx.fillStyle = 'red';
+        ctx.fillRect(enemy.x, enemy.y, 20, 20);
+    }
+
+    // Draw attack animations from towers to enemies
     ctx.strokeStyle = 'black';
     for (const tower of placedTowers) {
-        for (const enemy of activeEnemies) {
+        for (const enemy of activeEnemies) { // Ensure enemy is properly defined here
             const distance = calculateDistance(tower, enemy);
             if (distance <= tower.range && tower.cooldown === 0) {
                 ctx.beginPath();
                 ctx.moveTo(tower.x + 15, tower.y + 15); // Starting point at tower center
                 ctx.lineTo(enemy.x + 10, enemy.y + 10); // Ending point at enemy center
                 ctx.stroke();
-                
+
             }
         }
     }
-
-
-
-
 
             // Draw UI elements
             ctx.fillStyle = 'black';
